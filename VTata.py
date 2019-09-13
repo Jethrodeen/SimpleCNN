@@ -66,30 +66,97 @@ test_set = test_datagen.flow_from_directory('Vtata/test_set', target_size = (64,
 
 training_set.image_shape
 
+#checkpoint to store weights
+"""
+taken from 
+https://towardsdatascience.com/visualizing-intermediate-activation-in-convolutional-neural-networks-with-keras-260b36d60d0
+
+"""
+from keras.callbacks import ModelCheckpoint
+
+checkpointer = ModelCheckpoint(filepath="best_weights.hdf5",
+                               monitor = 'val_acc',
+                               verbose=1,
+                               save_best_only=True)
+
 #train model
 """
 arguments:
     1.steps per epoch: number of training images
     2.validation_steps = number of validation images
 """
-model.fit_generator(training_set, steps_per_epoch=1589,epochs = 3, validation_data= test_set, validation_steps= 378)
+history = model.fit_generator(training_set, steps_per_epoch=1589,epochs = 50, validation_data= test_set, validation_steps= 378
+                    , callbacks = [checkpointer]) #this line only if we want to save best weights
+
+#model save and accuracy plots
+"""
+from G Pierobon
+https://towardsdatascience.com/visualizing-intermediate-activation-in-convolutional-neural-networks-with-keras-260b36d60d0
+"""
+#load best weights
+model.load_weights('best_weights.hdf5')
+
+#save model
+model.save('cnn.h5')
+
+#plot
+import matplotlib.pyplot as plt
+
+acc = history.history['acc']
+val_acc = history.history['val_acc']
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+epochs = range(1, len(acc) + 1)
+plt.plot(epochs, acc, 'bo', label='Training acc')
+plt.plot(epochs, val_acc, 'b', label='Validation acc')
+plt.title('Training and validation accuracy')
+plt.legend()
+plt.figure()
+plt.plot(epochs, loss, 'bo', label='Training loss')
+plt.plot(epochs, val_loss, 'b', label='Validation loss')
+plt.title('Training and validation loss')
+plt.legend()
+plt.show()
+
+
+
+
 
 #=======================================================================================================================
 #Test on an image
 import numpy as np
 from keras.preprocessing import image
 
-test_image = image.load_img('Vtata/pred.jpg', target_size = (64, 64))
+test_image = image.load_img('dog2.jfif', target_size = (64, 64))
 test_image = image.img_to_array(test_image)
 test_image = np.expand_dims(test_image, axis = 0)
 
 result = model.predict(test_image)
 
+#check labels
 training_set.class_indices
 
 if result[0][0] == 1:
     prediction = 'dog'
-    else:
+else:
     prediction = 'cat'
 
 print(prediction)
+
+
+#=======================================================================================================================
+
+#check layers
+from keras import models
+
+# Extracts the outputs of all layers
+layer_outputs = [layer.output for layer in model.layers]
+
+# Creates a model that will return these outputs, given the model input
+activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
+
+# Returns a list of Numpy arrays: one array per layer activation
+activations = activation_model.predict(test_image)
+
+first_layer_activation = activations[2]
+print(first_layer_activation.shape)
