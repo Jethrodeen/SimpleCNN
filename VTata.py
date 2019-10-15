@@ -54,17 +54,6 @@ arguments:
 """
 model.compile(optimizer='adam', loss= 'binary_crossentropy', metrics =['accuracy'])
 
-#===============================================================================================
-#image processing =https://keras.io/preprocessing/image/
-from keras.preprocessing.image import ImageDataGenerator
-
-train_datagen = ImageDataGenerator(rescale = 1./255, shear_range = 0.2, zoom_range = 0.2, horizontal_flip = True)
-test_datagen = ImageDataGenerator(rescale = 1./255)
-training_set = train_datagen.flow_from_directory('Vtata/training_set', target_size = (64, 64), batch_size = 32, class_mode = 'binary')
-test_set = test_datagen.flow_from_directory('Vtata/test_set', target_size = (64, 64), batch_size = 32, class_mode = 'binary')
-
-
-training_set.image_shape
 
 #checkpoint to store weights
 """
@@ -78,6 +67,23 @@ checkpointer = ModelCheckpoint(filepath="best_weights.hdf5",
                                monitor = 'val_acc',
                                verbose=1,
                                save_best_only=True)
+
+#===============================================================================================
+#image processing =https://keras.io/preprocessing/image/
+#for custom dataset in folder "Vtata"
+
+from keras.preprocessing.image import ImageDataGenerator
+
+train_datagen = ImageDataGenerator(rescale = 1./255, shear_range = 0.2, zoom_range = 0.2, horizontal_flip = True)
+test_datagen = ImageDataGenerator(rescale = 1./255)
+training_set = train_datagen.flow_from_directory('Vtata/training_set', target_size = (64, 64), batch_size = 32, class_mode = 'binary')
+test_set = test_datagen.flow_from_directory('Vtata/test_set', target_size = (64, 64), batch_size = 32, class_mode = 'binary')
+
+
+training_set.image_shape
+
+
+# =============================================================================================
 
 #train model
 """
